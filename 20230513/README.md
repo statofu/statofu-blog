@@ -83,7 +83,7 @@ dispatch(uncheckWithTextCleaned());
 // By only checking the function declaration of `uncheckWithTextCleaned`, we don't know what multi states `uncheckWithTextCleaned` changes.
 ```
 
-Without tracking logis in function bodies, the multi states to be changed remain unknown so multi-state changing goes unpredictable. With tracking logics in function bodies, the multi states to be changed get known but overall cost of development on use increases:
+Without tracking logics in function bodies, the multi states to be changed remain unknown so multi-state changing goes unpredictable. With tracking logics in function bodies, the multi states to be changed get known but overall cost of development on use increases:
 
 ```ts
 function uncheckWithTextCleaned(): AppThunk {
@@ -203,9 +203,9 @@ To sum up, two problems that today's widely-accepted libraries of state manageme
 
 ## Predictability, and side effects
 
-A function is said to have side effects if it makes any effects other than outputing a return value. In the examples above, the sides effects of the functions are all states changing.
+A function is said to have side effects if it makes any effects other than outputting a return value. In the examples above, the sides effects of the functions are all states changing.
 
-Though, a function with side effects is not bound to behave unpredictably. With side effects of a function well controlled, the function can behave predictably. Like the example of Redux, a simple action is restricted, by the design of Redux, to changing the one state represented by the slice in which it is delcared. But, with side effects of a function badly controlled, as the function body goes more and more complicated, the side effects can become more and more out of control, which makes the function behaves unpredictably at last when the side effects become out of control completely.
+Though, a function with side effects is not bound to behave unpredictably. With side effects of a function well controlled, the function can behave predictably. Like the example of Redux, a simple action is restricted, by the design of Redux, to changing the one state represented by the slice in which it is declared. But, with side effects of a function badly controlled, as the function body goes more and more complicated, the side effects can become more and more out of control, which makes the function behaves unpredictably at last when the side effects become out of control completely.
 
 On the other hand, a function without side effects is naturally bound to behave predictably.
 
@@ -219,7 +219,7 @@ If the cost on the fundamental usages of state management gets increased by pref
 
 ## Another way of state management
 
-Having analyzed the problems, it's time to explore another way of state management, which also means to think about how to design another library of state management that well handles the two problems above. Although the two ideas metioned above of solving the predictability problem are both workable, I would, in persuit of simplicity, pick up the idea of eliminating side effects of state-changing functions thoroughly here for the first trial.
+Having analyzed the problems, it's time to explore another way of state management, which also means to think about how to design another library of state management that well handles the two problems above. Although the two ideas mentioned above of solving the predictability problem are both workable, I would, in pursuit of simplicity, pick up the idea of eliminating side effects of state-changing functions thoroughly here for the first trial.
 
 For one-state changes, a pure function that processes old one state to return new one state can be used:
 
@@ -264,7 +264,7 @@ const newCheckboxState = check(oldCheckboxState);
 setState(keyOfCheckboxState, newCheckboxState);
 ```
 
-These steps can also be defined as a reuseable function `operate`:
+These steps can also be defined as a reusable function `operate`:
 
 ```ts
 operate(keyOfCheckboxState, check);
@@ -272,7 +272,7 @@ operate(keyOfTextareaState, setText, '');
 operate([keyOfCheckboxState, keyOfTextareaState], uncheckWithTextCleaned);
 ```
 
-Then, the propotype has been shaped.
+Then, the prototype has been shaped.
 
 Next, more improvements should be found in the perspective of decreasing overall cost of development on use.
 
@@ -302,7 +302,7 @@ operate(defOfTextareaState, setText, '');
 operate([defOfCheckboxState, defOfTextareaState], uncheckWithTextCleaned);
 ```
 
-After that, the rest parts for the fundamental usages of state management would be added in a preferenceless way, which includes (1) getting states, (2) subscribing to state changes and (3) unsubcribing:
+After that, the rest parts for the fundamental usages of state management would be added in a preference-less way, which includes (1) getting states, (2) subscribing to state changes and (3) unsubscribing:
 
 ```ts
 const checkboxState1 = snapshot(defOfCheckboxState);
@@ -332,7 +332,7 @@ Then, another library of state management that well handles the problems of (1) 
 
 State management is a very basic but very vital part in frontend development, but today there is just no good enough library that achieves both predictable states changing and low overall cost of development on use at the same time, which sets daily challenges in the development.
 
-As good state management constitues a necessity for a good client app, perhaps, every of us, as frontend devs, may think a bit more about what is the best in state management.
+As good state management constitutes a necessity for a good client app, perhaps, every of us, as frontend devs, may think a bit more about what is the best in state management.
 
 In addition, for the convenience of the trials together, I followed the thoughts above and tried to build a library of state management https://github.com/statofu/statofu .
 
