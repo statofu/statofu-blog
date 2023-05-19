@@ -1,12 +1,12 @@
 # Tired of Redux, Recoil, MobX, Zustand, Jotai and Valtio? Time to explore another way of state management
 
-After my writing frontend code for seven more years, finalizing projects, having rethinks, I feel more and more confident that some of the things being used on a daily basis should be questioned, one of which is today's widely-accepted practices in **state management** 🙏. I would sharing some thoughts by this article for an exploration.
+After my writing frontend code for seven more years, finalizing projects, having rethinks, I feel more and more confident that some of the things being used on a daily basis should be questioned, one of which is about today's widely-accepted practices in **state management** 🙏. I would sharing some thoughts by this article for an exploration.
 
 ## Why not to stick with Redux, Recoil, MobX, Zustand, Jotai or Valtio
 
 By now, especially in React, there have been many libraries of state management. So, to clearly describe the problems, I would start the topic with the libraries in React.
 
-Firstly, let's see Redux. When a simple action changes one state, what one state it changes can be understood clearly by only checking the slice in which it is declared. That's good:
+Firstly, let's see Redux. When a simple action changes one state, what one state it changes can be understood clearly by only checking in which slice it is declared. That's good:
 
 ```ts
 const checkboxSlice = createSlice({
@@ -83,7 +83,7 @@ dispatch(uncheckWithTextCleaned());
 // By only checking the function declaration of `uncheckWithTextCleaned`, we don't know what multi states `uncheckWithTextCleaned` changes.
 ```
 
-Without tracking function bodies, the multi states to be changed remain unknown so multi-state changing goes unpredictable. With tracking function bodies, the multi states to be changed get known but overall cost of development on use increases:
+Without tracking logis in function bodies, the multi states to be changed remain unknown so multi-state changing goes unpredictable. With tracking logics in function bodies, the multi states to be changed get known but overall cost of development on use increases:
 
 ```ts
 function uncheckWithTextCleaned(): AppThunk {
@@ -193,9 +193,9 @@ checkboxStore.uncheckWithTextCleaned();
 // By only checking the function declaration of `checkboxStore.uncheckWithTextCleaned`, we don't know what states the method changes. To know that, what store properties the method directly or indirectly changes needs to be figured out by tracking function bodies.
 ```
 
-Similarly to Redux, without tracking function bodies, states changing goes unpredictable. With tracking function bodies, the cost increases.
+Similarly to Redux, without tracking logics in function bodies, states changing goes unpredictable. With tracking logics in function bodies, the cost increases.
 
-Besides, as Recoil cares quite much about asynchronousness, it's inconvenient to get states in state-changing hooks. As MobX has its own independent subscription mechanism, a strong understanding to correctly use it is required. As a result, these increase the cost further.
+Besides, as Recoil cares quite much about asynchronousness, getting states in a context of a state-changing hook is inconvenient. As MobX has its own independent subscription mechanism, a strong understanding to correctly use it is required. As a result, these increase the cost further.
 
 As for the rest 3 libraries, Zustand, Jotai and Valtio actually act very like Redux, Recoil and MobX separately. In other words I would say, the former ones are just lightweight versions of the latter ones so have the same problems.
 
@@ -205,7 +205,7 @@ To sum up, two problems that today's widely-accepted libraries of state manageme
 
 A function is said to have side effects if it makes any effects other than outputing a return value. In the examples above, the sides effects of the functions are all states changing.
 
-Though, a function with side effects is not bound to behave unpredictably. With side effects of a function well controlled, the function can behave predictably. Like the example of Redux, a simple action is restricted, by the design of Redux, to change the one state represented by the slice in which it is delcared. But, with side effects of a function badly controlled, while the function body goes more and more complicated, the side effects can become more and more out of control, which makes the function behaves unpredictably at last when the side effects become out of control completely.
+Though, a function with side effects is not bound to behave unpredictably. With side effects of a function well controlled, the function can behave predictably. Like the example of Redux, a simple action is restricted, by the design of Redux, to changing the one state represented by the slice in which it is delcared. But, with side effects of a function badly controlled, as the function body goes more and more complicated, the side effects can become more and more out of control, which makes the function behaves unpredictably at last when the side effects become out of control completely.
 
 On the other hand, a function without side effects is naturally bound to behave predictably.
 
@@ -219,7 +219,7 @@ If the cost on the fundamental usages of state management gets increased by pref
 
 ## Another way of state management
 
-Having analyzed the problems, it's time to explore another way of state management, which also means to think about how to design another library of state management that well handles the two problems above. Although the two ideas metioned above of solving the predictability problem are both workable, I would, in persuit of simplicity, pick up the idea of eliminating side effects of state-changing functions thoroughly here for now.
+Having analyzed the problems, it's time to explore another way of state management, which also means to think about how to design another library of state management that well handles the two problems above. Although the two ideas metioned above of solving the predictability problem are both workable, I would, in persuit of simplicity, pick up the idea of eliminating side effects of state-changing functions thoroughly here for the first trial.
 
 For one-state changes, a pure function that processes old one state to return new one state can be used:
 
@@ -264,7 +264,7 @@ const newCheckboxState = check(oldCheckboxState);
 setState(keyOfCheckboxState, newCheckboxState);
 ```
 
-The steps can also be defined as a reuseable function `operate`:
+These steps can also be defined as a reuseable function `operate`:
 
 ```ts
 operate(keyOfCheckboxState, check);
@@ -274,9 +274,9 @@ operate([keyOfCheckboxState, keyOfTextareaState], uncheckWithTextCleaned);
 
 Then, the propotype has been shaped.
 
-Next, more improvements would be found in the perspective of decreasing overall cost of development on use.
+Next, more improvements should be found in the perspective of decreasing overall cost of development on use.
 
-With a slightly closer look at the first parameter `keyOf...` of `operate`, I realize its role is to (1) identify states. But declaring a list of unique strings to identify states is very costly. Meanwhile, to fully define states, something is needed to (2) host the default states and (3) declare the states types. Luckily, when the three tips are put together, I find there is a matching concept in JS, which is Plain Old JavaScript Object(POJO). So, the cost can decrease further by defining states by POJOs:
+With a slightly closer look at the first parameter `keyOf...` of `operate`, I realize its role is to (1) identify states. But declaring a list of unique strings to identify states is very costly. Meanwhile, to fully define states, something else is needed to (2) host the default states and (3) declare the states types. Luckily, when the three tips are put together, I find there is just a matching concept in JS, which is Plain Old JavaScript Object(POJO). So, the cost can decrease further by defining states by POJOs:
 
 ```ts
 interface CheckboxState {
@@ -302,7 +302,7 @@ operate(defOfTextareaState, setText, '');
 operate([defOfCheckboxState, defOfTextareaState], uncheckWithTextCleaned);
 ```
 
-After that, I would add the rest parts for the fundamental usages of state management in a preferenceless way, which includes (1) getting states, (2) subscribing to state changes and (3) unsubcribing:
+After that, the rest parts for the fundamental usages of state management would be added in a preferenceless way, which includes (1) getting states, (2) subscribing to state changes and (3) unsubcribing:
 
 ```ts
 const checkboxState1 = snapshot(defOfCheckboxState);
@@ -326,14 +326,14 @@ const unsubscribeCheckboxTextareaStatesChanges = subscribe(
 );
 ```
 
-Fianlly, another library of state management that well handles the problems of (1) predictability of states changing and (2) overall cost of development on use has been roughly built.
+Then, another library of state management that well handles the problems of (1) predictability of states changing and (2) overall cost of development on use has been roughly built.
 
 ## Prospect
 
-State management is a very basic but very vital part in frontend development, but today there is just no good library that achieves both predictable states changing and low overall cost of development on use, which sets daily challenges in development.
+State management is a very basic but very vital part in frontend development, but today there is just no good enough library that achieves both predictable states changing and low overall cost of development on use at the same time, which sets daily challenges in the development.
 
-As good state management constitues a necessity for a good client app, perhaps, every of us, as frontend devs, may think about what is the best in state management.
+As good state management constitues a necessity for a good client app, perhaps, every of us, as frontend devs, may think a bit more about what is the best in state management.
 
-In addition, for the convenience of our trials together, I followed the thoughts above and tried to build a library of state management https://github.com/statofu/statofu .
+In addition, for the convenience of the trials together, I followed the thoughts above and tried to build a library of state management https://github.com/statofu/statofu .
 
-Comments are welcomed anywhere and anytime for the exploration.
+Comments are welcomed anywhere and anytime for an exploration of better state management.
